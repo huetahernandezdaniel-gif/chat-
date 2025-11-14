@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente Virtual - CECyTEM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1E40AF;
+            --secondary: #3B82F6;
+            --accent: #06D6A0;
+            --user-msg: #2563EB;
+            --bot-msg: #1D4ED8;
+            --background: #0F172A;
+            --surface: #1E293B;
+            --text: #F1F5F9;
+            --text-secondary: #94A3B8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 100;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .icono {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            border: 2px solid var(--accent);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .icono:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 0 20px var(--accent);
+        }
+
+        .uno h3 {
+            color: var(--accent);
+            font-size: 1.8rem;
+            text-shadow: 0 0 10px rgba(6, 214, 160, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px rgba(6, 214, 160, 0.3);
+            }
+            to {
+                text-shadow: 0 0 20px rgba(6, 214, 160, 0.6), 0 0 30px rgba(6, 214, 160, 0.4);
+            }
+        }
+
+        .dos {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .dos:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+        }
+
+        .dos h2 {
+            color: white;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        /* Video Background */
+        video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+            opacity: 0.3;
+        }
+
+        .capa {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--background), transparent);
+            z-index: -1;
+        }
+
+        /* Main Content */
+        main {
+            min-height: calc(100vh - 140px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        section {
+            width: 100%;
+            max-width: 800px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .cent {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: 60vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Chat Messages */
+        .message {
+            max-width: 80%;
+            padding: 1rem 1.2rem;
+            border-radius: 18px;
+            margin: 0.5rem 0;
+            position: relative;
+            animation: messageSlide 0.3s ease-out;
+            line-height: 1.5;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-line;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--user-msg), #1E3A8A);
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+            margin-left: auto;
+        }
+
+        .bot {
+            align-self: flex-start;
+            background: linear-gradient(135deg, var(--bot-msg), #1E40AF);
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 4px 15px rgba(29, 78, 216, 0.3);
+            margin-right: auto;
+        }
+
+        /* Chat Form */
+        .chat {
+            margin-top: 2rem;
+            position: relative;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: var(--text);
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(6, 214, 160, 0.3);
+            transform: scale(1.02);
+        }
+
+        input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--accent), #05A87F);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 5px 15px rgba(6, 214, 160, 0.4);
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        footer a {
+            color: var(--text);
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        footer a:hover {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 64, 175, 0.3);
+        }
+
+        /* Scrollbar */
+        .cent::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .cent::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .cent::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+        }
+
+        /* Pulse Animation */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(6, 214, 160, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(6, 214, 160, 0);
+            }
+        }
+
+        /* Quick Questions */
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+            justify-content: center;
+        }
+
+        .quick-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--text);
+            padding: 0.7rem 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        .quick-btn:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(30, 64, 175, 0.3);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+        }
+
+        .info-step {
+            margin: 0.5rem 0;
+            padding-left: 1rem;
+            border-left: 2px solid var(--primary);
+        }
+
+        /* Bot Icon */
+        .bot-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+                padding: 1rem;
+            }
+
+            .uno h3 {
+                font-size: 1.5rem;
+            }
+
+            .dos h2 {
+                font-size: 1rem;
+                padding: 0.6rem 1.5rem;
+            }
+
+            .cent {
+                height: 55vh;
+                padding: 1.5rem;
+            }
+
+            .message {
+                max-width: 90%;
+                padding: 0.9rem 1.1rem;
+            }
+
+            footer {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: center;
+                padding: 1rem;
+            }
+
+            footer a {
+                width: 220px;
+                justify-content: center;
+            }
+
+            .quick-questions {
+                gap: 0.6rem;
+            }
+
+            .quick-btn {
+                min-width: 120px;
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cent {
+                height: 50vh;
+                padding: 1rem;
+            }
+
+            .message {
+                max-width: 95%;
+                padding: 0.8rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            input {
+                padding: 0.8rem 1.2rem;
+                font-size: 0.9rem;
+            }
+
+            .send-btn {
+                width: 45px;
+                height: 45px;
+            }
+
+            .quick-btn {
+                min-width: 100px;
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <video muted autoplay loop src="vil.mp4"></video>
+    <div class="capa"></div>
+
+    <header>
+        <div class="icono">C</div>
+        <div class="uno">
+            <h3><i><b>CECyTEM EDUCATIVO</b></i></h3>
+        </div>
+        <div class="dos">
+            <h2><b>TU ÉXITO ES NUESTRA META 🎓</b></h2>
+        </div>
+    </header>
+
+    <main>
+        <section>
+            <article class="cent">
+                <div class="message bot">
+                    <span class="bot-icon">🤖</span> ¡Hola! Soy tu asistente virtual del CECyTEM.
+                    Puedo ayudarte con información sobre trámites escolares, fechas académicas,
+                    documentos y servicios educativos. ¿En qué te puedo ayudar hoy?
+                </div>
+
+                <div class="quick-questions">
+                    <button class="quick-btn" onclick="askQuestion('¿Cómo solicito una constancia de estudios?')">
+                        <i class="fas fa-file-certificate"></i> Constancia
+                    </button>
+                    <button class="quick-btn" onclick="askQuestion('¿Cuándo son las reinscripciones?')">
+                        <i class="fas fa-calendar-alt"></i> Reinscripciones
+                    </button>
+                    <button class="quick-btn" onclick="askQuestion('¿Dónde entrego documentos de vinculación?')">
+                        <i class="fas fa-folder-open"></i> Documentos
+                    </button>
+                    <button class="quick-btn" onclick="askQuestion('¿Dónde está ubicada la escuela?')">
+                        <i class="fas fa-map-marker-alt"></i> Ubicación
+                    </button>
+                </div>
+            </article>
+
+            <form class="chat" action="index.html" method="post">
+                <div class="chat-input-container">
+                    <input type="text" name="message" placeholder="Escribe tu pregunta aquí..." id="chatInput">
+                    <button type="submit" class="send-btn pulse">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <a href="index.html"><i class="fas fa-home"></i> Inicio</a>
+        <a href="dos.html"><i class="fas fa-info-circle"></i> Información</a>
+        <a href="cutro.html"><i class="fas fa-envelope"></i> Contacto</a>
+    </footer>
+
+    <script>
+        // Información académica del CECyTEM
+        const informacionAcademica = {
+            'carreras': {
+                'Técnico en Informática': '🖥️ Duración: 3 años',
+                'Técnico en Administración': '📊 Duración: 3 años',
+                'Técnico en Contabilidad': '📈 Duración: 3 años',
+                'Técnico en Electrónica': '🔌 Duración: 3 años',
+                'Técnico en Mecánica': '🔧 Duración: 3 años'
+            },
+            'servicios': {
+                'Biblioteca': '📚 Horario: 8:00 AM - 6:00 PM',
+                'Laboratorio de Computo': '💻 Horario: 7:00 AM - 8:00 PM',
+                'Orientación Educativa': '🧠 Disponible todo el día',
+                'Cafetería': '🍽️ Horario: 7:30 AM - 5:00 PM',
+                'Enfermería': '🏥 Horario: 8:00 AM - 4:00 PM'
+            }
+        };
+
+        // Respuestas predefinidas
+        const botResponses = {
+            'horario': '⏰ <strong>Horario escolar:</strong><br>Lunes a Viernes: 7:00 AM - 3:00 PM<br>Actividades extracurriculares: 3:00 PM - 6:00 PM',
+            'ubicación': '📍 <strong>Ubicación CECyTEM:</strong><br>AV. Educación #123<br>Colonia Ricardo Flores Magón<br>Código Postal: 50100',
+            'telefono': '📞 <strong>Teléfonos de contacto:</strong><br>• Dirección: 729-123-4567<br>• Control Escolar: 729-123-4568<br>• Orientación: 729-123-4569',
+            'director': '👨‍🏫 <strong>Director del Plantel:</strong><br>Lic. Roberto Martínez González',
+            'correo': '📧 <strong>Correo electrónico:</strong><br>cecytem.plantel@edu.mx',
+
+            // Constancias y trámites
+            'constancia': `
+                📄 <strong>Constancia de Estudios - CECyTEM</strong>
+                <div class="info-box">
+                    <strong>Para solicitar tu constancia de estudios:</strong>
+                    <div class="info-step">1. Accede al Sistema Integral de Información Administrativa (SIIAE)</div>
+                    <div class="info-step">2. Ingresa con tu usuario y contraseña</div>
+                    <div class="info-step">3. Dirígete a la sección "Trámites Escolares"</div>
+                    <div class="info-step">4. Selecciona "Constancia de Estudios"</div>
+                    <div class="info-step">5. Verifica tus datos y genera el documento</div>
+                    <div class="info-step">6. Descarga e imprime tu constancia</div>
+                </div>
+                <em>¿Necesitas ayuda con otro trámite?</em>
+            `,
+
+            'reinscripciones': `
+                📅 <strong>Fechas Académicas - CECyTEM</strong>
+                <div class="info-box">
+                    <strong>Calendario escolar:</strong>
+                    <div class="info-step">• <strong>Inscripciones:</strong> Agosto, a partir del día 29</div>
+                    <div class="info-step">• <strong>Reinscripciones:</strong> Febrero, a partir del día 27</div>
+                    <div class="info-step">• <strong>Exámenes ordinarios:</strong> Diciembre y Junio</div>
+                    <div class="info-step">• <strong>Periodo vacacional:</strong> Diciembre-Enero y Julio</div>
+                </div>
+                <em>Te recomendamos estar atento a los avisos oficiales del plantel.</em>
+            `,
+
+            'vinculacion': `
+                🏫 <strong>Documentos de Vinculación - CECyTEM</strong>
+                <div class="info-box">
+                    <strong>Lugar de entrega:</strong>
+                    <div class="info-step">Debes entregar tus documentos en las oficinas de vinculación:</div>
+                    <div class="info-step" style="text-align: center; font-weight: bold; margin: 0.8rem 0;">
+                        Colegio de Estudios Científicos y Tecnológicos del Estado de México (CECyTEM)<br>
+                        Departamento de Vinculación - Edificio B, Planta Baja
+                    </div>
+                    <div class="info-step"><strong>Horario de atención:</strong> Lunes a Viernes de 9:00 AM a 2:00 PM</div>
+                    <div class="info-step">Para mayor información, comunícate al 729-123-4570</div>
+                </div>
+            `,
+
+            // Carreras y servicios
+            'carreras': `
+                🎓 <strong>Carreras Técnicas Disponibles</strong>
+                <div class="info-box">
+                    ${Object.entries(informacionAcademica.carreras).map(([carrera, info]) =>
+                        `<div class="info-step"><strong>${carrera}:</strong> ${info}</div>`
+                    ).join('')}
+                </div>
+                <em>¡Todas nuestras carreras tienen validez oficial!</em>
+            `,
+
+            'servicios': `
+                🏢 <strong>Servicios Escolares</strong>
+                <div class="info-box">
+                    ${Object.entries(informacionAcademica.servicios).map(([servicio, info]) =>
+                        `<div class="info-step"><strong>${servicio}:</strong> ${info}</div>`
+                    ).join('')}
+                </div>
+            `,
+
+            // RESPUESTAS BÁSICAS
+            'saludo': '¡Hola! 😊 <span class="bot-icon">🤖</span> Soy tu asistente virtual del CECyTEM. ¿En qué puedo ayudarte hoy?',
+            'buenosdias': '¡Buenos días! ☀️ <span class="bot-icon">🤖</span> Espero que tengas un excelente día de estudios. ¿En qué puedo asistirte?',
+            'buenastardes': '¡Buenas tardes! 🌅 <span class="bot-icon">🤖</span> ¿En qué puedo ayudarte con información escolar?',
+            'buenasnoches': '¡Buenas noches! 🌙 <span class="bot-icon">🤖</span> ¿Necesitas información sobre trámites o servicios educativos?',
+            'gracias': '¡De nada! 😊 <span class="bot-icon">🤖</span> Estoy aquí para ayudarte en todo lo relacionado con tu educación.',
+            'adios': '¡Hasta luego! 👋 <span class="bot-icon">🤖</span> Que tengas éxito en tus estudios. ¡Nos vemos!',
+            'comoestas': '¡Estoy muy bien, gracias! 😄 <span class="bot-icon">🤖</span> Listo para ayudarte con información del CECyTEM.'
+        };
+
+        // Función para preguntas rápidas
+        function askQuestion(question) {
+            const chatContainer = document.querySelector('.cent');
+            const input = document.getElementById('chatInput');
+
+            // Mensaje del usuario
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user';
+            userMessage.textContent = question;
+            chatContainer.appendChild(userMessage);
+
+            // Respuesta del bot
+            setTimeout(() => {
+                const response = getBotResponse(question);
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot';
+                botMessage.innerHTML = response;
+                chatContainer.appendChild(botMessage);
+
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 800);
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Función para respuestas del bot
+        function getBotResponse(question) {
+            question = question.toLowerCase();
+
+            // RESPUESTAS BÁSICAS
+            if (question.includes('hola') || question === 'hi' || question === 'hello') {
+                return botResponses.saludo;
+            }
+            if (question.includes('buenos días') || question.includes('buenos dias')) {
+                return botResponses.buenosdias;
+            }
+            if (question.includes('buenas tardes')) {
+                return botResponses.buenastardes;
+            }
+            if (question.includes('buenas noches')) {
+                return botResponses.buenasnoches;
+            }
+            if (question.includes('gracias') || question.includes('thank')) {
+                return botResponses.gracias;
+            }
+            if (question.includes('adiós') || question.includes('adios') || question.includes('bye') || question.includes('chao')) {
+                return botResponses.adios;
+            }
+            if (question.includes('cómo estás') || question.includes('como estas') || question.includes('qué tal')) {
+                return botResponses.comoestas;
+            }
+
+            // INFORMACIÓN ACADÉMICA
+            if (question.includes('constancia') || question.includes('certificado') || question.includes('estudios')) {
+                return botResponses.constancia;
+            }
+            if (question.includes('reinscripcion') || question.includes('inscripcion') || question.includes('fecha') || question.includes('cuándo')) {
+                return botResponses.reinscripciones;
+            }
+            if (question.includes('vinculacion') || question.includes('documento') || question.includes('entrega') || question.includes('donde entrego')) {
+                return botResponses.vinculacion;
+            }
+            if (question.includes('carrera') || question.includes('técnico') || question.includes('tecnico') || question.includes('estudiar')) {
+                return botResponses.carreras;
+            }
+            if (question.includes('servicio') || question.includes('biblioteca') || question.includes('laboratorio') || question.includes('cafetería')) {
+                return botResponses.servicios;
+            }
+            if (question.includes('cecytem') || question.includes('colegio') || question.includes('plantel') || question.includes('escuela')) {
+                return '🏫 <strong>Colegio de Estudios Científicos y Tecnológicos del Estado de México (CECyTEM)</strong><br>Institución de Educación Media Superior que ofrece carreras técnicas con validez oficial.<br><br>Puedo ayudarte con información sobre:<br>• Trámites escolares<br>• Fechas académicas<br>• Carreras técnicas<br>• Servicios educativos<br>• Documentación requerida';
+            }
+
+            // Información general
+            if (question.includes('horario') || question.includes('hora')) {
+                return botResponses.horario;
+            }
+            if (question.includes('ubicado') || question.includes('dirección') || question.includes('donde') || question.includes('ubicacion') || question.includes('colon') || question.includes('flores magon')) {
+                return botResponses.ubicación;
+            }
+            if (question.includes('teléfono') || question.includes('numero') || question.includes('contacto') || question.includes('llamar')) {
+                return botResponses.telefono;
+            }
+            if (question.includes('director') || question.includes('directora')) {
+                return botResponses.director;
+            }
+            if (question.includes('correo') || question.includes('email') || question.includes('electrónic')) {
+                return botResponses.correo;
+            }
+
+            return '🤔 <span class="bot-icon">🤖</span> No entendí tu pregunta. Puedo ayudarte con información sobre:<br>• Trámites escolares (constancias, reinscripciones)<br>• Fechas académicas importantes<br>• Carreras técnicas disponibles<br>• Servicios del plantel<br>• Ubicación y contactos<br><br>¿Podrías reformular tu pregunta?';
+        }
+
+        // Manejar envío del formulario
+        document.querySelector('.chat').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = this.querySelector('input');
+            const message = input.value.trim();
+
+            if (message) {
+                const chatContainer = document.querySelector('.cent');
+
+                // Mensaje del usuario
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user';
+                userMessage.textContent = message;
+                chatContainer.appendChild(userMessage);
+
+                // Limpiar input
+                input.value = '';
+
+                // Respuesta del bot
+                setTimeout(() => {
+                    const response = getBotResponse(message);
+                    const botMessage = document.createElement('div');
+                    botMessage.className = 'message bot';
+                    botMessage.innerHTML = response;
+                    chatContainer.appendChild(botMessage);
+
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 800);
+
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        });
+
+        // Efecto de escritura en el placeholder
+        const input = document.getElementById('chatInput');
+        const placeholders = [
+            "Pregunta sobre trámites escolares...",
+            "¿Cómo solicito una constancia de estudios?",
+            "¿Cuándo son las reinscripciones?",
+            "¿Dónde entrego documentos de vinculación?",
+            "Consulta sobre carreras técnicas...",
+            "Información de horarios y contactos..."
+        ];
+        let currentPlaceholder = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+
+        function typeEffect() {
+            const currentText = placeholders[currentPlaceholder];
+
+            if (isDeleting) {
+                input.placeholder = currentText.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                input.placeholder = currentText.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            if (!isDeleting && charIndex === currentText.length) {
+                isDeleting = true;
+                setTimeout(typeEffect, 2000);
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                currentPlaceholder = (currentPlaceholder + 1) % placeholders.length;
+                setTimeout(typeEffect, 500);
+            } else {
+                setTimeout(typeEffect, isDeleting ? 50 : 100);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(typeEffect, 1000);
+        });
+    </script>
+</body>
+</html>
